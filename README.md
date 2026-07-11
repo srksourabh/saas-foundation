@@ -265,6 +265,17 @@ just say so — the skill substitutes the alternative and the architecture stays
 | **Database ORM** | Drizzle ORM | Prisma, Kysely, TypeORM |
 | **CSS** | Tailwind CSS v4 | Panda CSS, vanilla CSS modules, styled-components |
 | **Package manager** | pnpm | npm, yarn, bun |
+| **AI platform** | Claude Code | OpenClaw / Hermes, Codex, Anti-Gravity, Cursor, Windsurf |
+
+Each AI platform gets its own agent configuration file(s):
+
+| Platform | File(s) generated | Purpose |
+|----------|-------------------|---------|
+| Claude Code (default) | `CLAUDE.md` | Stack, commands, conventions, security rules |
+| OpenClaw / Hermes | `soul.md` + `user.md` | Agent identity + user preferences |
+| Codex / Anti-Gravity | `agent.md` | Agent behavior, tools, security checklist |
+| Cursor / Windsurf | `CLAUDE.md` | Same as Claude Code |
+| Generic / any LLM | `CLAUDE.md` + `agent.md` | Maximum compatibility |
 
 **Examples of alternative requests:**
 
@@ -284,8 +295,12 @@ uses the default:
 2. **UI library** — shadcn/ui (default), Radix Primitives, MUI, Chakra, or something else?
 3. **API layer** — tRPC (default), Hono, or plain Next.js API Routes?
 4. **Auth provider** — NextAuth v5 (default), Lucia v3, or something else?
+5. **AI platform** — Claude Code (default), OpenClaw / Hermes, Codex, Anti-Gravity, Cursor, Windsurf, or generic?
 
 If you say "surprise me" or "your call" on any question, the skill uses the default.
+The AI platform answer determines which agent configuration files are generated:
+Claude Code gets `CLAUDE.md`, OpenClaw/Hermes get `soul.md` + `user.md`,
+Codex/Anti-Gravity get `agent.md`, and generic gets both `CLAUDE.md` + `agent.md`.
 
 ### Generation process (6 phases)
 
@@ -296,7 +311,7 @@ If you say "surprise me" or "your call" on any question, the skill uses the defa
 | **2 — Security** | CSP + Helmet headers, CORS, rate limiting, RBAC middleware, audit logging, brute force protection, password policy | middleware.ts, config, audit schema |
 | **3 — Operations** | Vitest tests, Playwright E2E, Pino logging, Sentry integration, health checks, CI/CD YAML | ~15 test files, CI pipeline |
 | **4 — Scaffolding** | CLI scripts for generating models, pages, features, and emails | scripts/scaffold.ps1 |
-| **5 — Knowledge** | All documentation files written from templates with project name injected | 8 files (CLAUDE.md, memory.md, progress.md, ARCHITECTURE.md, DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/adr-template.md) |
+| **5 — Knowledge** | Universal docs + platform-specific agent config (CLAUDE.md for Claude/Cursor, soul.md+user.md for OpenClaw/Hermes, agent.md for Codex/Anti-Gravity) | 8+ universal files + 1-2 platform config files |
 | **6 — Verification** | 11-point checklist: install, lint, typecheck, test, docker build, health endpoint, auth flow | Pass/fail on each check |
 
 ---
@@ -328,6 +343,15 @@ These are the files the skill writes **into your generated project**. Each templ
 | `templates/SECURITY.md` | `docs/SECURITY.md` | Security model document. Covers authentication method, RBAC roles, rate limits, CSP/Helmet headers, data protection (SQL injection, XSS, secrets), audit logging policy, dependency security, and incident response procedures. |
 | `templates/CONTRIBUTING.md` | `docs/CONTRIBUTING.md` | Onboarding and contribution guide. Step-by-step setup instructions, development workflow (branch → code → test → lint → typecheck → build → commit → PR), code conventions (naming, imports, exports), testing conventions, and a pull request checklist. |
 | `templates/ADR-template.md` | `docs/ADR/adr-template.md` | Architecture Decision Record template. Each ADR captures: date, status (Proposed/Accepted/Deprecated/Superseded), context, decision, rationale, trade-offs, and consequences. Promotes "decisions are documented" culture from day one. |
+
+#### Platform-specific agent config (one set per project)
+
+| Template | Generated when platform is... | Purpose |
+|----------|------------------------------|---------|
+| `templates/CLAUDE.md` | Claude Code, Cursor, Windsurf, or generic | Per-project AI instructions. Stack, commands, conventions, security rules. |
+| `templates/soul.md` | OpenClaw / Hermes | Agent identity, core principles, decision-making framework, session ritual. Defines *who the agent is* and *how it thinks*. |
+| `templates/user.md` | OpenClaw / Hermes | User profile, communication preferences, expertise areas, project context. Defines *who the user is* and *how they want to interact*. |
+| `templates/agent.md` | Codex, Anti-Gravity, or generic | Agent behavioral guidelines, tool access, code standards, security checklist, knowledge continuity rules. |
 
 #### Configuration
 
@@ -888,6 +912,121 @@ a required variable was missed. This file prevents all of that.
 
 ---
 
+### `soul.md` — Agent identity & ethos (OpenClaw / Hermes)
+
+> Generated only when the AI platform is OpenClaw or Hermes.
+
+**What it is**: The identity, behavioral principles, and decision-making framework
+for AI agents. Where `CLAUDE.md` describes *what the project is*, `soul.md` describes
+*who the agent is* and *how it thinks*. It establishes the agent's persona, core
+principles, communication style, and constraints.
+
+**What it contains** (full template at `templates/soul.md`):
+- **Identity**: "I am an expert full-stack engineer..." — role declaration
+- **Core principles**: Minimalism, surgical changes, security-first, goal-driven,
+  knowledge continuity — 5 principles that govern every action
+- **Communication style**: Direct, concise, bullet points, trade-offs presented,
+  push back on over-engineering
+- **Decision-making framework**: A 4-gate process (Occam's Razor → error cost →
+  knowledge continuity → security) that the agent runs before every decision
+- **Constraints**: Monorepo rules, TypeScript strictness, Drizzle-only DB access,
+  Tailwind-only CSS, testing requirements, secrets policy
+- **Stack reference**: Complete technology stack with placeholders
+- **Session ritual**: A 7-step ritual the agent follows at every session start and end
+
+**Who uses it**: AI agents running on OpenClaw or Hermes platforms. It is the first
+file read at session start — before even looking at the codebase.
+
+**When to update**: When the team's engineering principles change, new constraints
+are adopted, or the decision-making framework is refined.
+
+**Why it matters**: Without a soul file, the agent has no identity. It doesn't know
+*how* to think — only *what* to build. This file gives the agent a consistent
+personality, decision-making framework, and ethical boundary that persists across
+every session. For OpenClaw and Hermes, this is the equivalent of Claude's system
+prompt — it defines the agent's very being.
+
+---
+
+### `user.md` — User preferences & context (OpenClaw / Hermes)
+
+> Generated only when the AI platform is OpenClaw or Hermes. Always paired with
+> `soul.md` — they form a pair: who the agent is + who the user is.
+
+**What it is**: The user's profile, communication preferences, technical level, and
+project context. Where `soul.md` defines the agent's identity, `user.md` defines
+*who the agent is talking to* — so the agent can tailor its communication and
+behavior accordingly.
+
+**What it contains** (full template at `templates/user.md`):
+- **User profile**: Role, technical level, primary goal for the project
+- **Communication preferences**: Explanation depth, decision transparency, simplicity
+  preference, progress style
+- **Project context**: One-line description, target audience, success metric, timeline
+- **Common request patterns**: What the user implicitly expects (security by default,
+  simplicity, tests included, docs updated, surgical changes)
+- **Expertise areas**: Ticked checklist of technologies the user is comfortable with
+- **Quick reference table**: Commit style, branch naming, communication preference,
+  testing expectation, documentation expectation
+
+**Who uses it**: AI agents running on OpenClaw or Hermes. The agent reads this file
+at session start to calibrate its communication style and understand the user's
+expectations and expertise level.
+
+**When to update**: When the user's role changes, their technical level changes
+(e.g., beginner → intermediate), project goals shift, or communication preferences
+evolve.
+
+**Why it matters**: Without a user file, the agent communicates the same way to
+everyone — using the same jargon, depth, and style. A non-technical CEO gets the
+same response as a senior engineer. `user.md` enables the agent to adapt its
+communication to the specific person it's working with, making interactions more
+efficient and less frustrating.
+
+---
+
+### `agent.md` — Agent behavior & tool configuration (Codex / Anti-Gravity)
+
+> Generated when the AI platform is Codex, Anti-Gravity, or generic/any LLM.
+
+**What it is**: The comprehensive behavioral guide, tool access list, code standards,
+security checklist, and knowledge continuity rules for AI agents. It is the single
+source of truth for *how the agent should operate* on this project.
+
+**What it contains** (full template at `templates/agent.md`):
+- **Agent role**: A clear declaration of the agent's job — "expert software engineer
+  automating development for a full-stack TypeScript SaaS"
+- **Behavioral guidelines**: 4 rules with detailed sub-rules (think before coding,
+  simplicity first, surgical changes, goal-driven execution) — each with concrete
+  examples of right and wrong behavior
+- **Tool access**: Complete list of `pnpm` commands available for development,
+  testing, database operations, and scaffolding
+- **Code standards**: Language-specific rules for TypeScript (no `any`, Zod-first),
+  React/Next.js (App Router, server components by default), Database (Drizzle only,
+  UUID IDs, soft deletes), and Testing (hermetic, co-located, 80% coverage)
+- **Security checklist**: A 9-point checklist the agent must verify before every PR —
+  no secrets, no raw SQL, Zod validation, auth checks, audit logging, CSP/Helmet,
+  rate limiting, session rotation
+- **Knowledge continuity rules**: A mandatory 5-step session ritual for reading and
+  updating memory.md, progress.md, and ADRs — with a warning that "failure to
+  maintain knowledge continuity will result in context loss between sessions"
+
+**Who uses it**: AI agents on Codex, Anti-Gravity, or any generic LLM platform.
+It serves the same purpose as `CLAUDE.md` + `soul.md` combined — instructions,
+identity, and behavioral rules all in one file.
+
+**When to update**: When code standards evolve, new tools are added, the security
+checklist grows, or knowledge continuity procedures are refined.
+
+**Why it matters**: Codex and Anti-Gravity do not have a standard `.claude/skills/`
+system or a `CLAUDE.md` convention. Without `agent.md`, the agent has no structured
+guidance — it guesses at conventions, may violate security rules, and will lose
+context between sessions. This file gives non-Claude platforms the same structured
+instruction set that Claude Code gets from its skill system, ensuring consistent
+behavior regardless of which LLM or platform is used.
+
+---
+
 ## Extending the foundation
 
 The foundation is deliberately minimal — it gives you the solid base without domain logic. Here's how to extend it:
@@ -926,6 +1065,26 @@ is in `reference/stack.md`.
 | **Pino** | Winston | 10x faster, JSON-native |
 | **Sentry** | Datadog | Free tier, excellent Next.js integration |
 | **Resend** | SendGrid | Modern API, React Email templates |
+| **CLAUDE.md (Claude)** | soul.md+user.md (OpenClaw) | Native Claude Code skill system reads `.claude/` configs |
+| **soul.md+user.md (OpenClaw)** | CLAUDE.md (Claude) | OpenClaw/Hermes use identity+user pair for agent configuration |
+| **agent.md (Codex)** | CLAUDE.md (Claude) | Non-Claude platforms need a single standalone instruction file |
+
+---
+
+## Platform support
+
+This foundation works regardless of your AI platform, IDE, or LLM:
+
+| Platform | Generated config file(s) | How the agent reads it |
+|----------|-------------------------|----------------------|
+| **Claude Code** | `CLAUDE.md` | Native `.claude/skills/` system — auto-reads at session start |
+| **OpenClaw** | `soul.md` + `user.md` | Soul file loaded as agent identity, user file as context |
+| **Hermes** | `soul.md` + `user.md` | Same as OpenClaw — compatible format |
+| **Codex** | `agent.md` | Referenced as behavioral configuration |
+| **Anti-Gravity** | `agent.md` | Referenced as agent instruction file |
+| **Cursor** | `CLAUDE.md` | Reads `.claude/` configs — same format as Claude Code |
+| **Windsurf** | `CLAUDE.md` | Reads `.claude/` configs — same format |
+| **Generic / any LLM** | `CLAUDE.md` + `agent.md` | Dual format — Claude-compatible + standalone instructions |
 
 ---
 

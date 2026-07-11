@@ -2,6 +2,9 @@
 
 > Task and milestone tracker. Updated whenever work completes or blockers arise.
 > AI agents: read this at session start to know where work left off.
+>
+> Agent config lives in: `CLAUDE.md` (Claude/Cursor), `soul.md` + `user.md`
+> (OpenClaw/Hermes), or `agent.md` (Codex/Anti-Gravity).
 
 ## Status overview
 

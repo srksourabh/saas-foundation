@@ -1,5 +1,9 @@
 # CLAUDE.md — <project-name>
 
+> AI agent instructions for this project.
+> Compatible with: Claude Code, Cursor, Windsurf, and any tool reading `.claude/` configs.
+> For OpenClaw / Hermes, see `soul.md` and `user.md`. For Codex / Anti-Gravity, see `agent.md`.
+
 ## Project type
 Full-stack TypeScript SaaS (Next.js 16 + tRPC + Drizzle + PostgreSQL)
 

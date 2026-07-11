@@ -2,10 +2,12 @@
 name: saas-foundation
 description: >
   Build the world's best full-stack TypeScript SaaS foundation from scratch.
-  Generates a complete project with monorepo (Turborepo + pnpm), Next.js 16 App
-  Router, tRPC, Drizzle ORM + PostgreSQL, auth (NextAuth/Lucia), Tailwind +
-  shadcn/ui, Vitest + Playwright, Docker Compose, CI/CD, and all knowledge
-  continuity files (CLAUDE.md, memory.md, progress.md, ARCHITECTURE.md, ADR/,
+  Works with any AI platform, IDE, or LLM. Generates a complete project with
+  monorepo (Turborepo + pnpm), Next.js 16 App Router, tRPC, Drizzle ORM +
+  PostgreSQL, auth (NextAuth/Lucia), Tailwind + shadcn/ui, Vitest + Playwright,
+  Docker Compose, CI/CD, and all knowledge continuity files (CLAUDE.md for
+  Claude/Cursor, soul.md+user.md for OpenClaw/Hermes, agent.md for Codex/
+  Anti-Gravity, plus memory.md, progress.md, ARCHITECTURE.md, ADR/,
   SECURITY.md, CONTRIBUTING.md, DESIGN.md). Hardens security by default: CSP, rate limiting,
   RBAC, Zod validation, audit logging, dependency scanning.
   Triggers on: "create a new project", "start a new SaaS", "project foundation",
@@ -13,9 +15,12 @@ description: >
   foundation", "foundation template", "world's best foundation", "new full-stack
   project", "start a monorepo".
   Covers: project scaffolding, security hardening, knowledge continuity, team
-  onboarding, operational excellence, code generation scripts.
+  onboarding, operational excellence, code generation scripts, multi-platform
+  agent configuration (Claude Code, OpenClaw, Hermes, Codex, Anti-Gravity,
+  Cursor, Windsurf, generic LLM).
   NOT for: single-file scripts, existing projects that need incremental changes,
-  non-TypeScript stacks, mobile-only apps.
+  mobile-only apps. (Works with any TypeScript-compatible framework, not just
+  Next.js — swap the frontend layer as needed.)
 ---
 
 # SaaS Foundation
@@ -44,6 +49,17 @@ they can swap any layer — nothing is locked in.
 | **ORM** | Drizzle ORM | Prisma, Kysely, TypeORM |
 | **CSS** | Tailwind CSS v4 | Panda CSS, vanilla CSS modules, styled-components |
 | **Package manager** | pnpm | npm, yarn, bun |
+| **AI platform** | Claude Code | OpenClaw / Hermes, Codex, Anti-Gravity, Cursor, Windsurf, generic LLM |
+
+Each AI platform gets its own agent configuration file generated in the project:
+
+| If platform is... | Creates | So the AI knows... |
+|-------------------|---------|-------------------|
+| Claude Code (default) | `CLAUDE.md` | Stack, commands, conventions, security rules |
+| OpenClaw / Hermes | `soul.md` + `user.md` | Agent identity + user preferences |
+| Codex / Anti-Gravity | `agent.md` | Agent behavior, tools, and security checklist |
+| Cursor / Windsurf | `CLAUDE.md` | Same as Claude Code — Cursor/Windsurf read `.claude/` configs |
+| Generic / any LLM | `CLAUDE.md` + `agent.md` | Combined instructions for maximum compatibility |
 
 If the user says nothing about these, use the defaults. If they ask for an alternative,
 substitute it during generation — the architecture stays the same.
@@ -56,8 +72,11 @@ Ask the user these questions. Omit any that the user already answered:
 2. **UI library**: shadcn/ui (default) or Radix Primitives or something else?
 3. **API layer**: tRPC (default) or Hono or plain Next.js API Routes?
 4. **Auth provider**: NextAuth v5 (default) or Lucia v3 or something else?
+5. **AI platform**: Claude Code (default), OpenClaw / Hermes, Codex, Anti-Gravity, Cursor, Windsurf, or generic?
 
 If they say "surprise me" or "your call" on any question, use the default.
+Use the AI platform answer to determine which agent configuration file(s) to
+generate in Phase 5.
 
 ## Execution phases
 
@@ -100,7 +119,10 @@ Create directory structure:
 │   ├── CONTRIBUTING.md
 │   └── ADR/
 │       └── adr-template.md
-├── CLAUDE.md
+├── CLAUDE.md                   # Platform: Claude Code / Cursor / Windsurf
+├── soul.md                     # Platform: OpenClaw / Hermes (agent identity)
+├── user.md                     # Platform: OpenClaw / Hermes (user profile)
+├── agent.md                    # Platform: Codex / Anti-Gravity (agent config)
 ├── .env.example
 ├── .gitignore
 ├── package.json                # Root (pnpm workspace)
@@ -356,11 +378,30 @@ Write each file using templates in `templates/`. Customize:
 - Replace `<year>` with the current year
 - Fill in any choices the user made (auth provider, etc.)
 
-Files to write — each one has a specific purpose and audience:
+Files to write — **always write the universal files** (memory.md, progress.md,
+ARCHITECTURE.md, DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/). Then write the
+**platform-specific agent config file(s)** based on the user's AI platform choice.
 
-1. **`CLAUDE.md`** — Per-project AI instructions. The very first file any AI agent
-   reads when starting work. Contains stack, commands, conventions, and security
-   rules. Without this file, every AI session has zero context.
+### Agent configuration files (platform-dependent)
+
+Generate one of these based on the user's AI platform answer:
+
+| If user chose... | Write this file | Purpose | From template |
+|------------------|----------------|---------|---------------|
+| Claude Code (default) | `CLAUDE.md` | Stack, commands, conventions, security rules | `templates/CLAUDE.md` |
+| OpenClaw / Hermes | `soul.md` + `user.md` | Agent identity + user preferences | `templates/soul.md` + `templates/user.md` |
+| Codex / Anti-Gravity | `agent.md` | Agent behavior, tools, security checklist | `templates/agent.md` |
+| Cursor / Windsurf | `CLAUDE.md` | Cursor/Windsurf read `.claude` configs | `templates/CLAUDE.md` |
+| Generic / any LLM | `CLAUDE.md` + `agent.md` | Maximum compatibility across platforms | `templates/CLAUDE.md` + `templates/agent.md` |
+
+Each platform-specific file tells the AI agent how to behave, what tools to use,
+and what conventions to follow. Together with the universal docs, they ensure
+every session starts with full context regardless of which platform the user
+works on.
+
+### Universal files (written for every project)
+
+1. **`docs/memory.md`** — Session-level context store. Records project metadata,
 
 2. **`docs/memory.md`** — Session-level context store. Records project metadata,
    architecture decisions (with ADR links), key dependencies, date-stamped session
@@ -414,8 +455,10 @@ Run these checks before declaring done:
 05. [ ] docker compose build succeeds
 06. [ ] .env.example has no real secrets
 07. [ ] .gitignore covers: node_modules, .env, dist, .next, *.log
-08. [ ] All 9 knowledge files exist: CLAUDE.md, memory.md, progress.md,
-        ARCHITECTURE.md, DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/adr-template.md
+08a. [ ] Universal docs exist: memory.md, progress.md, ARCHITECTURE.md,
+         DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/adr-template.md
+08b. [ ] Platform config exists: CLAUDE.md OR soul.md+user.md OR agent.md
+         (matching user's AI platform choice)
 09. [ ] middleware.ts applies CSP + Helmet headers
 10. [ ] Health endpoint returns 200 + JSON with status fields
 11. [ ] Auth flow works: signup → login → protected route
@@ -436,6 +479,7 @@ When completed, return:
 - Design system: Token-based (light/dark), Inter + JetBrains Mono, responsive grid
 - Backend: tRPC + Drizzle ORM + PostgreSQL
 - Auth: <NextAuth v5 | Lucia v3>
+- AI platform: <Claude Code | OpenClaw | Codex | Anti-Gravity | Cursor | generic>
 - Queue: BullMQ + Redis
 - Test: Vitest + Playwright
 - CI: GitHub Actions

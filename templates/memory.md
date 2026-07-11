@@ -2,6 +2,9 @@
 
 > Project context and decision log. Updated at the end of every session.
 > AI agents read this at session start to resume context.
+>
+> Agent config lives in: `CLAUDE.md` (Claude/Cursor), `soul.md` + `user.md`
+> (OpenClaw/Hermes), or `agent.md` (Codex/Anti-Gravity).
 
 ## Project metadata
 - **Created**: <date>
