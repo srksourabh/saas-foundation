@@ -31,14 +31,33 @@ docs, security hardening, CI/CD, Docker Compose, and scaffolding scripts.
 - User asks for project scaffolding with auth, DB, CI/CD, and docs built-in
 - User mentions "world's best foundation" or "project foundation"
 
+## Default choices vs alternatives
+
+This foundation ships with sensible defaults. If the user wants something different,
+they can swap any layer — nothing is locked in.
+
+| Layer | Default | Alternatives they can choose |
+|-------|---------|------------------------------|
+| **UI library** | shadcn/ui (Radix-based, Tailwind) | Radix Primitives direct, MUI, Ant Design, Chakra, Park UI |
+| **API layer** | tRPC v11 (end-to-end type safety) | Hono (edge-native), Next.js API Routes (simpler), Express/Fastify (traditional) |
+| **Auth** | NextAuth v5 | Lucia v3, Clerk, Auth0, Supabase Auth |
+| **ORM** | Drizzle ORM | Prisma, Kysely, TypeORM |
+| **CSS** | Tailwind CSS v4 | Panda CSS, vanilla CSS modules, styled-components |
+| **Package manager** | pnpm | npm, yarn, bun |
+
+If the user says nothing about these, use the defaults. If they ask for an alternative,
+substitute it during generation — the architecture stays the same.
+
 ## Before you start
 
-Ask the user exactly **2** questions:
+Ask the user these questions. Omit any that the user already answered:
 
 1. **Project name** (kebab-case, e.g., `my-saas`)
-2. **Auth provider preference**: NextAuth v5 (simpler, more OAuth providers) or Lucia v3 (more flexible, lower-level)
+2. **UI library**: shadcn/ui (default) or Radix Primitives or something else?
+3. **API layer**: tRPC (default) or Hono or plain Next.js API Routes?
+4. **Auth provider**: NextAuth v5 (default) or Lucia v3 or something else?
 
-If they say "surprise me" or "your call", use NextAuth v5.
+If they say "surprise me" or "your call" on any question, use the default.
 
 ## Execution phases
 
@@ -148,7 +167,9 @@ If Lucia v3:
 **1f. Web app (`apps/web`)**
 
 - Next.js 16 with App Router
-- `app/layout.tsx` — providers (TRPC, Auth, Theme)
+- If the user chose an alternative API layer (Hono, Next.js API Routes), use that instead of tRPC
+- If the user chose an alternative UI library (MUI, Chakra, etc.), use that instead of shadcn/ui
+- `app/layout.tsx` — providers (API, Auth, Theme)
 - `app/page.tsx` — landing page (redirects to dashboard if authed)
 - `app/(auth)/login/page.tsx` — login form
 - `app/(auth)/signup/page.tsx` — signup form
@@ -160,13 +181,25 @@ If Lucia v3:
 - `components/` — ui components from shadcn
 - `e2e/` — Playwright tests (auth flow)
 
-**1g. tRPC setup**
+**1g. API layer (tRPC by default)**
 
+If the user chose **tRPC** (default):
 - Root router in `packages/` or `apps/web/trpc/`
 - Context: auth session, db, request ID
 - Public procedure: no auth required
 - Protected procedure: auth + role check
 - Error formatter: Zod errors → field-level messages
+
+If the user chose **Hono**:
+- Routes in `apps/web/app/api/` using Hono's router
+- Middleware for auth, rate limiting, CORS
+- Zod validation on every route
+- OpenAPI docs via `@hono/zod-openapi`
+
+If the user chose **Next.js API Routes**:
+- Routes in `apps/web/app/api/` using Route Handlers
+- Middleware at `apps/web/src/middleware.ts`
+- Zod validation per route
 
 **1h. Docker Compose**
 
@@ -197,6 +230,8 @@ Design system must include:
 - Iconography conventions (lucide-react, inheritance)
 
 **1j. UI (`packages/ui`)**
+
+If the user chose an alternative UI library, use that instead of shadcn/ui.
 
 - shadcn/ui initialized with `components.json`
 - Base components: Button, Input, Card, Dialog, DropdownMenu, Table, Badge, Skeleton, Avatar, Sonner/Toast
@@ -321,15 +356,49 @@ Write each file using templates in `templates/`. Customize:
 - Replace `<year>` with the current year
 - Fill in any choices the user made (auth provider, etc.)
 
-Files to write:
-1. `CLAUDE.md` — per-project AI instructions (from template)
-2. `docs/memory.md` — initialized with project metadata, architecture summary, decisions
-3. `docs/progress.md` — initialized with Phase 0-6 checklist, all marked pending
-4. `docs/ARCHITECTURE.md` — system design overview (from template)
-5. `docs/DESIGN.md` — design system tokens and conventions (from template)
-6. `docs/SECURITY.md` — security model (from template)
-7. `docs/CONTRIBUTING.md` — setup + contribution workflow (from template)
-8. `docs/ADR/adr-template.md` — ADR decision record template
+Files to write — each one has a specific purpose and audience:
+
+1. **`CLAUDE.md`** — Per-project AI instructions. The very first file any AI agent
+   reads when starting work. Contains stack, commands, conventions, and security
+   rules. Without this file, every AI session has zero context.
+
+2. **`docs/memory.md`** — Session-level context store. Records project metadata,
+   architecture decisions (with ADR links), key dependencies, date-stamped session
+   notes, known issues, and environment details. The AI reads this at every session
+   start to resume context. Humans read it for history and onboarding. **Must be
+   updated at the end of every work session** with a new session note entry.
+
+3. **`docs/progress.md`** — Milestone and task tracker. Contains Phase 0-6 checklists
+   (all marked pending on creation), a status overview table, completed milestones
+   log, blockers table, and "next up" section. The AI reads this to know where work
+   left off. Humans use it for standups and planning. **Checkboxes are ticked as
+   work completes. Blockers are added as they arise.** The progress.md file in the
+   skill itself serves double duty: it tracks the project foundation and also works
+   as documentation for the skill's generation process.
+
+4. **`docs/ARCHITECTURE.md`** — System design overview. Shows how Next.js, tRPC,
+   Drizzle, PostgreSQL, and Redis connect. Defines the data model (users, sessions,
+   audit_logs), request flow, security boundaries, and package dependency graph.
+   Updated when the architecture changes significantly.
+
+5. **`docs/DESIGN.md`** — Design system specification. Brand palette, semantic
+   colors (light + dark), type scale, spacing, border radius, shadows, motion,
+   layout system, component tiers, state patterns, form patterns, accessibility
+   baselines, dark mode implementation, iconography, and coding conventions.
+   Updated when brand or UI patterns change.
+
+6. **`docs/SECURITY.md`** — Security model document. Auth method, RBAC roles, rate
+   limits, CSP/Helmet headers, data protection, audit logging, dependency security,
+   and incident response. Updated when security posture changes.
+
+7. **`docs/CONTRIBUTING.md`** — Developer onboarding guide. Step-by-step setup,
+   8-step development workflow, code conventions, testing conventions, and PR
+   checklist. Every new developer or AI agent reads this first.
+
+8. **`docs/ADR/adr-template.md`** — Architecture Decision Record template. Used to
+   create individual ADR files (`adr-001-*.md`) for every significant architectural
+   decision. Copy the template to a new file, fill it out, and commit alongside
+   the decision's code changes.
 
 ---
 

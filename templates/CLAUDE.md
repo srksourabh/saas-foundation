@@ -3,11 +3,11 @@
 ## Project type
 Full-stack TypeScript SaaS (Next.js 16 + tRPC + Drizzle + PostgreSQL)
 
-## Stack
-- **Frontend**: Next.js 16 (App Router), Tailwind CSS v4, shadcn/ui
-- **Backend**: tRPC v11 (type-safe RPC), Next.js API routes
-- **Database**: PostgreSQL + Drizzle ORM
-- **Auth**: <auth-provider>
+## Stack (defaults — alternatives noted)
+- **Frontend**: Next.js 16 (App Router), Tailwind CSS v4, shadcn/ui *(alt: MUI, Chakra, Radix)*
+- **Backend**: tRPC v11 (type-safe RPC) *(alt: Hono, Next.js API Routes)*
+- **Database**: PostgreSQL + Drizzle ORM *(alt: Prisma, Kysely)*
+- **Auth**: <auth-provider> *(alt: the other auth option, Clerk, Auth0)*
 - **Validation**: Zod
 - **ORM**: Drizzle (with drizzle-kit for migrations)
 - **Queue**: BullMQ + Redis

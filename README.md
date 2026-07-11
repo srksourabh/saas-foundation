@@ -252,21 +252,47 @@ The skill auto-fires when you say any of these phrases:
 | New full-stack project | "new full-stack project with monorepo" |
 | Start a monorepo | "start a monorepo project" |
 
+### Default choices vs alternatives
+
+This foundation uses **sensible defaults** for every layer. If you want something different,
+just say so — the skill substitutes the alternative and the architecture stays the same.
+
+| Layer | Default | Alternatives you can request |
+|-------|---------|------------------------------|
+| **UI library** | shadcn/ui (Radix + Tailwind) | Radix Primitives, MUI, Ant Design, Chakra, Park UI |
+| **API layer** | tRPC v11 (end-to-end typesafe) | Hono, plain Next.js API Routes, Express, Fastify |
+| **Auth** | NextAuth v5 | Lucia v3, Clerk, Auth0, Supabase Auth |
+| **Database ORM** | Drizzle ORM | Prisma, Kysely, TypeORM |
+| **CSS** | Tailwind CSS v4 | Panda CSS, vanilla CSS modules, styled-components |
+| **Package manager** | pnpm | npm, yarn, bun |
+
+**Examples of alternative requests:**
+
+```
+"create a project called acme with MUI instead of shadcn"
+"scaffold a SaaS using Hono for the API layer"
+"start a new project with Prisma instead of Drizzle"
+"build a foundation with Chakra UI and Express backend"
+```
+
 ### Pre-flight questions
 
-Before generating, the skill asks exactly **2 questions**:
+Before generating, the skill asks a few questions. Omit any that don't apply — the skill
+uses the default:
 
 1. **Project name** — kebab-case, e.g., `my-saas`
-2. **Auth provider** — NextAuth v5 (simpler, more OAuth providers) or Lucia v3 (more flexible, lower-level)
+2. **UI library** — shadcn/ui (default), Radix Primitives, MUI, Chakra, or something else?
+3. **API layer** — tRPC (default), Hono, or plain Next.js API Routes?
+4. **Auth provider** — NextAuth v5 (default), Lucia v3, or something else?
 
-If you say "surprise me" or "your call", it defaults to NextAuth v5.
+If you say "surprise me" or "your call" on any question, the skill uses the default.
 
 ### Generation process (6 phases)
 
 | Phase | What happens | Output |
 |-------|-------------|--------|
 | **0 — Skeleton** | Creates directory structure, root configs (turborepo, pnpm, tsconfig, vitest, playwright) | ~60 directories, ~20 config files |
-| **1 — Core infra** | Drizzle schema (users/sessions/audit_logs), auth, Zod validators, tRPC router, Next.js pages, Docker Compose, design system, shadcn/ui | ~80 files across all packages |
+| **1 — Core infra** | Drizzle schema (users/sessions/audit_logs), auth, Zod validators, tRPC router (or Hono/API Routes if requested), Next.js pages, Docker Compose, design system, shadcn/ui (or alternative UI library if requested) | ~80 files across all packages |
 | **2 — Security** | CSP + Helmet headers, CORS, rate limiting, RBAC middleware, audit logging, brute force protection, password policy | middleware.ts, config, audit schema |
 | **3 — Operations** | Vitest tests, Playwright E2E, Pino logging, Sentry integration, health checks, CI/CD YAML | ~15 test files, CI pipeline |
 | **4 — Scaffolding** | CLI scripts for generating models, pages, features, and emails | scripts/scaffold.ps1 |
@@ -423,20 +449,22 @@ create a new project called my-saas
 ```
 
 The agent will:
-1. Ask for your project name and auth provider preference
-2. Generate the entire project structure
+1. Ask for your project name and choices (omit any for defaults)
+2. Generate the entire project structure with your chosen stack
 3. Write every file from templates
 4. Run verification checks
 5. Return a summary with next steps
 
-### Example session
+### Example session (all defaults)
 
 ```
 You:  create a new project called acme
-Agent: Two questions:
+Agent: Questions:
        1. Project name: acme (pre-filled)
-       2. Auth provider: NextAuth v5 or Lucia v3?
-You:  NextAuth v5
+       2. UI library: shadcn/ui (default) or something else?
+       3. API layer: tRPC (default) or Hono or API Routes?
+       4. Auth provider: NextAuth v5 (default) or Lucia v3?
+You:  all defaults
 Agent: [generates project... returns:]
 
       ## Project created: acme
@@ -452,104 +480,411 @@ Agent: [generates project... returns:]
       - Queue: BullMQ + Redis
       - Test: Vitest + Playwright
       - CI: GitHub Actions
+```
 
-      ### Quick start
-      pnpm install
-      cp .env.example .env   # fill in values
-      docker compose up -d
-      pnpm db:push
-      pnpm dev
+### Example session (with alternatives)
+
+```
+You:  scaffold a project called dashbird with MUI and Hono
+Agent: Questions:
+       1. Project name: dashbird (pre-filled)
+       2. UI library: MUI (pre-filled from your request)
+       3. API layer: Hono (pre-filled from your request)
+       4. Auth provider: NextAuth v5 (default)
+You:  looks good
+Agent: [generates project with MUI components and Hono API routes]
+```
+
+You can mention your preferences directly in the trigger phrase — the skill
+understands and fills them in without asking.
+
+---
+
+## Quick start (once generated)
+
+```bash
+cd <project-name>
+cp .env.example .env   # fill in database URL, auth secret, OAuth keys
+docker compose up -d   # starts Postgres + Redis
+pnpm install
+pnpm db:push           # push Drizzle schema to database
+pnpm dev               # start development server
 ```
 
 ---
 
-## What each template produces
+## What each generated file is for
 
-### CLAUDE.md (per-project AI instructions)
+Below is a detailed breakdown of every `.md` file the foundation generates in your
+project — what it contains, who uses it, when to update it, and why it matters.
 
-When the AI returns to work on your new project, it reads `CLAUDE.md` to get:
-- The exact stack (so it doesn't guess)
-- All available commands (dev, build, test, db operations)
-- The directory structure (so it knows where files live)
-- Convention rules (naming, imports, testing)
-- Security rules it must follow
+---
 
-This means every session starts with full context — no repeated "what stack are we using?" questions.
+### `CLAUDE.md` — Per-project AI agent instructions
 
-### memory.md (session context)
+**What it is**: The instruction manual for any AI agent working on your project.
+Claude Code, Cursor, and other AI tools read this file at session start to
+understand the project's stack, conventions, and security rules.
 
-The memory file is structured so both humans and AI can read it:
-- **Project metadata**: creation date, stack, auth method, deployment targets
-- **Architecture decisions**: ADR entries with date, decision, reason, and trade-offs
-- **Key dependencies**: list with brief descriptions
-- **Session notes**: date-stamped entries recording what was worked on, decisions made, files touched, and current state
-- **Known issues**: bug tracker and pending decisions
-- **Environment**: dev/staging/prod URLs and notes
+**What it contains**:
+- Project type declaration (Full-stack TypeScript SaaS)
+- Exact stack listing (every framework and library with versions)
+- All available commands (`pnpm dev`, `pnpm build`, `pnpm test`, `pnpm db:push`, etc.)
+- Directory structure map (where files live across the monorepo)
+- Code conventions (naming, imports, exports, error handling)
+- Security rules the agent must follow (validate input, check auth, never log PII)
 
-### progress.md (milestone tracking)
+**Who uses it**: AI agents (Claude Code, Cursor, Windsurf, OpenClaw) on every session.
+Humans rarely need to read it — it works in the background.
 
-- **Phase 0-6 checklists**: every step required to complete the foundation, all initially marked pending
-- **Completed table**: date, milestone, and notes for each completed phase
-- **Blockers table**: what's blocked, why, and current status
+**When to update**: When you add a new command, change a convention, add a dependency,
+or modify the security rules. The agent references it automatically.
 
-### ARCHITECTURE.md (system design)
+**Why it matters**: Without `CLAUDE.md`, every AI session starts with zero context.
+The agent must guess your stack, ask repetitive questions, and may violate conventions.
+This file eliminates that friction entirely. One source of truth for every AI interaction.
 
-- ASCII system diagram showing Next.js → tRPC → Drizzle → PostgreSQL → Redis flow
-- Step-by-step request flow explanation
-- Data model definitions for users, sessions, and audit_logs
-- Security boundary table (network → transport → application → auth → data)
-- Package dependency graph
+---
 
-### DESIGN.md (design system)
+### `docs/memory.md` — Session-level context & decision log
 
-- Brand palette with token names and hex values
-- Semantic colors for light and dark mode (background, text, border, success/warning/error/info)
-- Complete type scale (display through caption) with font stack, weights, and line heights
-- Spacing scale (0 to 24, rem and px values)
-- Border radius tokens (sm through full)
-- Shadow tokens for light and dark mode
-- Motion tokens (duration and easing) with `prefers-reduced-motion` support
-- Layout system with breakpoints, grid rules, and page layout diagram
-- Three-tier component architecture (shadcn primitives → composed → feature)
-- State patterns for loading, empty, error, and edge cases
-- Form patterns using react-hook-form + Zod + shadcn/ui
-- Accessibility baseline meeting WCAG AA
-- Dark mode implementation (class-based, localStorage)
-- Iconography conventions (lucide-react)
-- Coding conventions (naming, exports, CVA, cn() utility)
+**What it is**: A living document that records project metadata, every architectural
+decision made (with links to ADRs), session-by-session notes, known issues, and
+environment details. It is the project's collective memory — for both humans and AI.
 
-### SECURITY.md (security model)
+**What it contains** (full template at `templates/memory.md`):
+- **Project metadata**: creation date, stack summary, auth provider, deployment targets (dev/staging/prod URLs)
+- **Architecture decisions**: chronologically ordered ADR references with date, decision, reason, and trade-offs for each significant choice made
+- **Key dependencies**: every major library with a one-line description of what it does
+- **Session notes**: date-stamped entries in `### YYYY-MM-DD: Title` format, recording:
+  - What was worked on during the session
+  - Key decisions made (with links to files)
+  - Files touched or created
+  - Current state or blockers encountered
+  - Next steps for the following session
+- **Known issues**: running log of bugs, pending decisions, and tech debt with status
+- **Environment**: connection details for dev (Docker Compose), staging, and production
 
-- Authentication method, providers, password policy, session rotation, brute force protection
-- RBAC roles and enforcement
-- API rate limiting, input validation, CORS, headers
-- Data protection (SQL injection, XSS, secrets, password hashing)
-- Audit logging (what gets logged, when)
-- Dependency security (pnpm audit, Dependabot)
-- Incident response (Sentry, rate limit alerts, audit review)
+**Who uses it**: Both humans and AI agents. At the start of every session, the AI
+reads `memory.md` to catch up on what happened previously. Humans read it to review
+project history or onboard new team members.
 
-### CONTRIBUTING.md (contributor guide)
+**When to update**: At the end of every work session. The AI agent (or human) adds a
+new session note entry with date, work done, decisions made, and current state.
+New architecture decisions get an ADR reference added. New bugs or issues get added
+to the known issues section.
 
-- Step-by-step setup from `git clone` to `pnpm dev`
-- 8-step development workflow
-- Code conventions (naming, imports, exports)
-- Testing conventions (unit, integration, E2E, hermetic tests)
-- 7-point pull request checklist
+**Usage example**:
+```markdown
+### 2026-07-12: Implemented authentication flow
+- Set up NextAuth v5 with Google OAuth provider
+- Created login page at `app/(auth)/login/page.tsx`
+- Added session validation middleware
+- Blocked: need Google API credentials from admin
+- Next: wire up signup form and email verification
+```
 
-### ADR/adr-template.md (decision records)
+**Why it matters**: Without a memory file, context dies with every session. The AI
+forgets what it built yesterday, decisions get remade (possibly with different
+outcomes), and blockers go unresolved. `memory.md` is the thread that connects every
+session into a coherent development process.
 
-- Date, status, context, decision, rationale, trade-offs, and consequences
-- Encourages documenting every architectural decision as it's made
+---
 
-### .env.example (environment configuration)
+### `docs/progress.md` — Milestone & task tracker
 
-- Database URL (PostgreSQL)
-- Auth secret + Google OAuth credentials
-- Redis URL (for queue + rate limiting)
-- Resend API key (email)
-- Upstash Redis credentials (rate limiting)
-- Sentry DSN (error monitoring)
-- App URL + Node environment
+**What it is**: A structured checklist that tracks the foundation build process and
+any subsequent development milestones. It is the single source of truth for "what's
+done, what's next, what's blocked."
+
+**What it contains** (full template at `templates/progress.md`):
+- **Phase 0-6 checklists**: Every step required to complete the foundation, organized
+  by phase. All items start as `[ ]` (pending) and get checked off as completed.
+  - Phase 0: Directory structure, root configs, .gitignore
+  - Phase 1: Database schema, auth, tRPC, validators, config, web app, Docker, design system, UI
+  - Phase 2: CSP, Helmet, CORS, rate limiting, RBAC, audit logging, session rotation
+  - Phase 3: Tests, logging, error handling, health checks, CI/CD
+  - Phase 4: Scaffolding scripts (model, page, feature, email generators)
+  - Phase 5: Knowledge files (CLAUDE.md, memory.md, progress.md, ARCHITECTURE.md, DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/)
+  - Phase 6: Final verification (install, lint, typecheck, test, Docker build, health endpoint, auth flow)
+- **Completed table**: Date-stamped log of completed milestones with notes
+- **Blockers table**: Table of unresolved blockers with date, description, and status
+
+**Who uses it**: Project leads, developers, and AI agents. The AI reads it at session
+start to know where work left off. Humans use it for standups, sprint planning, and
+status reports.
+
+**When to update**: Whenever a task is completed or a blocker arises. The AI agent
+ticks checkboxes as it finishes work. Humans add rows to the blockers table when
+something is stuck.
+
+**Usage example**:
+```markdown
+## Completed
+
+| Date       | Milestone        | Notes                    |
+|------------|------------------|--------------------------|
+| 2026-07-12 | Phase 1 — Core   | Auth + DB + API complete |
+
+## Blockers
+
+| Date       | Blocker                    | Status    |
+|------------|----------------------------|-----------|
+| 2026-07-12 | Need Google OAuth keys     | unresolved|
+```
+
+**Why it matters**: Without progress tracking, you have no answer to "where are we?"
+The AI can't prioritize what to work on next, tasks fall through cracks, and blockers
+stay blocked. `progress.md` turns ambiguity into a clear checklist.
+
+---
+
+### `docs/ARCHITECTURE.md` — System design reference
+
+**What it is**: The authoritative document for how the system is built, how data
+flows, and how components connect. The architectural blueprint of your application.
+
+**What it contains** (full template at `templates/ARCHITECTURE.md`):
+- **ASCII system diagram**: Text-based visual showing the flow from Next.js (App Router)
+  through tRPC to Drizzle ORM / PostgreSQL, with Redis for queue and rate limiting
+- **Request flow**: Step-by-step walkthrough of how a browser request reaches the database
+  and returns — from RSC/client component through tRPC context, validation, auth check,
+  and query execution
+- **Data model**: Complete definitions for every database table:
+  - `users` — id (UUID), email (unique, indexed), name, avatar_url, role (admin/user/viewer),
+    created_at, updated_at
+  - `sessions` — id (UUID), user_id (FK -> users), expires_at, created_at
+  - `audit_logs` — id (UUID), user_id (FK, nullable), action, resource, details (JSONB),
+    ip_address, created_at
+- **Security boundaries**: Table mapping each layer (network, transport, application,
+  auth, data) to its protection mechanism
+- **Package dependency graph**: Visual map showing `apps/web` depending on each package
+  and each package's internal dependencies
+
+**Who uses it**: Developers onboarding to the project, AI agents reasoning about
+architecture, and architects reviewing design decisions. Updated when the architecture
+changes significantly.
+
+**When to update**: When you add a new service, change the data flow, modify the
+database schema, or alter the security architecture. Infrequent but critical.
+
+**Why it matters**: Without an architecture document, every developer and AI agent
+must reverse-engineer the system from code. This document provides the "big picture"
+that code alone cannot convey — enabling faster onboarding and better architectural
+decisions.
+
+---
+
+### `docs/DESIGN.md` — Design system & UI conventions
+
+**What it is**: The complete design token specification and UI coding conventions
+for the project. Ensures visual consistency across every page and component.
+
+**What it contains** (full template at `templates/DESIGN.md`):
+- **Brand palette**: Tokenized color scale (50-900) with hex values and usage
+  descriptions (e.g., `--color-brand-500` = primary buttons)
+- **Semantic colors**: Light and dark mode values for background, text, borders,
+  success/warning/error/info states
+- **Typography**: Complete type scale from display (4.5rem) through caption (0.75rem)
+  with font stack (Inter + JetBrains Mono), weights, and line heights
+- **Spacing scale**: rem and px values from 0 to 24
+- **Border radius tokens**: sm (0.375rem) through full (9999px) with usage
+- **Shadow tokens**: light and dark mode values for sm/md/lg/xl
+- **Motion tokens**: duration and easing values with `prefers-reduced-motion` respect
+- **Layout system**:
+  - Breakpoints: sm (640px) through 2xl (1536px)
+  - Grid: sidebar (16rem) + main (1fr), max content width 72rem
+  - ASCII layout diagram showing sidebar + header + content area
+- **Component tier architecture**:
+  - Tier 1 — Primitives: shadcn/ui components (Button, Input, Card, etc.)
+  - Tier 2 — Composed: DataTable, FormField, PageHeader, EmptyState, ConfirmDialog
+  - Tier 3 — Feature: domain-specific components (never in packages/ui/)
+- **State patterns**: Loading (skeletons), empty (EmptyState), error (inline + retry),
+  edge (truncation, overflow)
+- **Form patterns**: react-hook-form + Zod resolver, loading states, inline errors,
+  toast on success, ConfirmDialog for destructive actions
+- **Accessibility baseline**: WCAG AA contrast, keyboard navigation, focus rings,
+  aria attributes, skip-to-content link
+- **Dark mode**: class-based implementation, localStorage persistence, system
+  preference detection
+- **Iconography**: lucide-react, consistent sizing, `currentColor` inheritance
+- **Coding conventions**: file naming, component structure, CVA usage, cn() utility
+
+**Who uses it**: Front-end developers and AI agents when building UI components.
+Designers reviewing visual consistency.
+
+**When to update**: When brand colors change, new UI patterns are introduced, or
+accessibility standards are raised.
+
+**Why it matters**: Without a design system document, every developer builds UI with
+different colors, spacing, and patterns. The result is visual inconsistency and
+technical debt. `DESIGN.md` codifies the rules so every component looks like it
+belongs to the same application.
+
+---
+
+### `docs/SECURITY.md` — Security model & incident response
+
+**What it is**: The complete security documentation for the project — how auth works,
+what protections are in place, and what to do when something goes wrong.
+
+**What it contains** (full template at `templates/SECURITY.md`):
+- **Authentication**: Method (session-based), providers (Google OAuth + email/password),
+  password policy (min 8 chars, 1 uppercase, 1 number), session rotation (on login/logout/role
+  upgrade), brute force protection (5 failures = 15-minute lockout)
+- **Authorization (RBAC)**: Three roles (admin, user, viewer), enforcement via tRPC
+  middleware (`requireRole('admin')`), default role for new users
+- **API security**: Rate limiting (10 req/s per IP for auth, 100 req/s per user for API),
+  input validation (Zod on every mutation), CORS (whitelist only), headers (CSP + Helmet)
+- **Data protection**: SQL injection prevention (Drizzle ORM), XSS prevention (React +
+  CSP), secrets management (.env gitignored), password hashing (Argon2 or bcrypt)
+- **Audit logging**: All sensitive operations logged to `audit_logs` table — login/logout
+  attempts, role changes, account deletion, data exports, failed auth batches
+- **Dependency security**: pnpm audit in CI, Dependabot weekly scans, version pinning
+  strategy
+- **Incident response**: Sentry error tracking (no PII), rate limit alerts, weekly
+  audit log review
+
+**Who uses it**: Developers implementing security features, ops teams responding to
+incidents, and security auditors reviewing protections.
+
+**When to update**: When auth logic changes, new security headers are added, or
+incident response procedures are revised.
+
+**Why it matters**: Security is not "set and forget." `SECURITY.md` ensures every team
+member and AI agent knows exactly what protections exist and how to maintain them.
+It's also critical for compliance audits and incident response.
+
+---
+
+### `docs/CONTRIBUTING.md` — Developer onboarding & contribution workflow
+
+**What it is**: The step-by-step guide for anyone (human or AI) who needs to set up
+the project and start contributing. Eliminates "how do I run this?" questions.
+
+**What it contains** (full template at `templates/CONTRIBUTING.md`):
+- **Setup instructions**: Prerequisites (Node.js 20+, pnpm 9+, Docker), clone commands,
+  environment setup, Docker Compose startup, schema push, dev server launch — all in
+  copy-paste-ready bash commands
+- **Development workflow**: 8-step process from branch creation through PR:
+  1. Branch (`feat/` or `fix/`)
+  2. Code (surgical changes)
+  3. Test (pnpm test + pnpm test:e2e)
+  4. Lint (pnpm lint)
+  5. Typecheck (pnpm typecheck)
+  6. Build (pnpm build)
+  7. Commit (conventional commits)
+  8. PR (describe what and why)
+- **Code conventions**: File naming (kebab-case), functions/variables (camelCase),
+  components/types (PascalCase), constants (UPPER_SNAKE_CASE), imports (package aliases),
+  exports (named preferred, default for pages only)
+- **Testing conventions**: Where tests live (co-located `__tests__/`, `packages/db/__tests__`,
+  `apps/web/e2e/`), hermiticity rules, test data factories
+- **Pull request checklist**: 7 boxes to tick before opening a PR — compiles, tests pass,
+  lint passes, no `any` types, no secrets, no debug logs, surgical changes
+
+**Who uses it**: New developers joining the project, AI agents setting up the
+environment for the first time, PR reviewers enforcing standards.
+
+**When to update**: When setup steps change, conventions evolve, or CI requirements
+are updated.
+
+**Why it matters**: Without contributing docs, every new developer or AI agent must
+figure out setup and conventions from scratch. This leads to errors, inconsistent
+code, and wasted time. `CONTRIBUTING.md` makes onboarding a mechanical process.
+
+---
+
+### `docs/ADR/adr-template.md` — Architecture Decision Records
+
+**What it is**: A template for documenting every significant architectural decision
+in a structured, reviewable format. Each decision gets its own file in the `ADR/`
+directory (e.g., `adr-001-auth-strategy.md`, `adr-002-database-choice.md`).
+
+**What the template contains** (full template at `templates/ADR-template.md`):
+- **ADR number and title**: e.g., `ADR-001: Authentication strategy`
+- **Date**: When the decision was made
+- **Status**: Proposed → Accepted → Deprecated → Superseded
+- **Context**: What problem prompted this decision? What constraints existed?
+- **Decision**: What was decided? Be specific and unambiguous.
+- **Rationale**: Why this choice over alternatives? What evidence supports it?
+- **Trade-offs**: Pros and cons of the decision (minimum 2 of each)
+- **Consequences**: What becomes easier or harder as a result?
+
+**Who uses it**: Any team member or AI agent making a significant decision. The
+`.md` files are committed alongside code and reviewed in PRs.
+
+**When to create**: When you choose a database, pick an auth provider, decide on a
+state management approach, add a major dependency, change the data model, or make
+any decision with lasting impact.
+
+**Usage example** (an actual ADR in the project):
+```markdown
+# ADR-001: Authentication strategy
+
+**Date**: 2026-07-12
+**Status**: Accepted
+
+## Context
+We need to authenticate users in our SaaS app. Options include session-based
+auth, JWT, and third-party providers. We want OAuth support and self-hosting.
+
+## Decision
+Use NextAuth v5 with database sessions. Providers: Google OAuth + email/password.
+
+## Rationale
+NextAuth v5 has the best Next.js integration, supports multiple OAuth providers
+out of the box, and stores sessions in our PostgreSQL database (via Drizzle
+adapter). Self-hosting avoids vendor lock-in (vs Clerk/Auth0).
+
+## Trade-offs
+- Pro: Full control over user data
+- Pro: Free at any scale (no per-user pricing)
+- Con: Must manage session invalidation ourselves
+- Con: More setup work than Auth0
+
+## Consequences
+- Must implement password reset and email verification flows
+- Session invalidation requires database queries on every request
+- No built-in MFA — must add separately if needed
+```
+
+**Why it matters**: Architecture decisions are the most expensive thing to reverse.
+Without ADRs, decisions are made in Slack threads or hallway conversations and
+forgotten within weeks. ADRs create a permanent, searchable, reviewable record
+of *why* the system is the way it is — preventing future developers from
+unknowingly reversing good decisions.
+
+---
+
+### `.env.example` — Environment variable reference
+
+**What it is**: A committed template showing every environment variable the
+application needs, with placeholder values and documentation.
+
+**What it contains** (full template at `templates/.env.example`):
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | Encryption key for session tokens |
+| `AUTH_GOOGLE_ID` | Google OAuth client ID |
+| `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
+| `REDIS_URL` | Redis connection string (queue + rate limiting) |
+| `RESEND_API_KEY` | Email delivery API key |
+| `UPSTASH_REDIS_REST_URL` | Rate limiting REST endpoint |
+| `UPSTASH_REDIS_REST_TOKEN` | Rate limiting auth token |
+| `SENTRY_DSN` | Error monitoring DSN |
+| `NEXT_PUBLIC_APP_URL` | Public-facing app URL |
+| `NODE_ENV` | Environment (development/production) |
+
+**Who uses it**: Every developer setting up the project. Copied to `.env` and filled
+with real values.
+
+**When to update**: When a new environment variable is added or removed.
+
+**Why it matters**: Without `.env.example`, developers don't know what secrets they
+need to configure. Real secrets get committed to git. Services fail silently because
+a required variable was missed. This file prevents all of that.
 
 ---
 
@@ -569,11 +904,13 @@ The foundation is deliberately minimal — it gives you the solid base without d
 
 ---
 
-## Stack decisions
+## Stack decisions (defaults)
 
-Every technology in this foundation was chosen deliberately. The full rationale is in `reference/stack.md`, but the headline comparisons:
+Every technology below is the **default** for this foundation. You can swap any layer
+by mentioning your preference when invoking the skill. The full rationale for each default
+is in `reference/stack.md`.
 
-| This | Not this | Why |
+| Default | Alternative | Why this default |
 |------|----------|-----|
 | **Turborepo** | Nx | Lighter, faster, Vercel-native |
 | **pnpm** | npm/yarn | Content-addressable store, strict deps |
