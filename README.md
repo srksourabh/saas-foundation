@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-srksourabh%2Fsaas--foundation-181717?logo=github)](https://github.com/srksourabh/saas-foundation)
 
-**saas-foundation** is a Claude Code skill (compatible with any AI agent tool that supports Claude skills) that generates a complete, production-grade TypeScript SaaS starter project from scratch. It is not a template you clone — it is an **intelligent scaffolder** that asks two questions, then builds the entire project for you.
+**saas-foundation** is a Claude Code skill (compatible with any AI agent tool that supports Claude skills) that generates a complete, production-grade SaaS starter project from scratch. It is not a template you clone — it is an **intelligent scaffolder** that starts by offering a broad technology-stack menu, then builds the project and its operating context for you.
 
 When invoked, it creates your project in seconds, not hours.
 
@@ -42,6 +42,22 @@ When invoked, it creates your project in seconds, not hours.
 ---
 
 ## What it generates
+
+### Mandatory project context
+
+Every generated project includes these root-level files, ready for immediate use:
+
+| File | Purpose |
+|---|---|
+| `README.md` | Overview, selected stack, quick start, and document map |
+| `AGENTS.md` | Rules and commands for AI agents and contributors |
+| `PRODUCT.md` / `REQUIREMENTS.md` | Product direction and accepted build contract |
+| `ARCHITECTURE.md` / `DESIGN.md` / `SECURITY.md` | Technical, UX, and safety blueprint |
+| `DATABASE.md` / `API.md` / `TESTING.md` | Data, interface, and quality contracts |
+| `DEPLOYMENT.md` | Environments, release, smoke-check, and rollback runbook |
+| `DECISIONS.md` / `PROGRESS.md` / `CHANGELOG.md` | Decisions, active work, and release history |
+
+For an existing project, the skill preserves useful content and restructures these files into the standard format instead of replacing them wholesale.
 
 ```
 <project-name>/

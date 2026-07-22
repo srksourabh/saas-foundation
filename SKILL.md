@@ -1,26 +1,14 @@
 ---
 name: saas-foundation
 description: >
-  Build the world's best full-stack TypeScript SaaS foundation from scratch.
-  Works with any AI platform, IDE, or LLM. Generates a complete project with
-  monorepo (Turborepo + pnpm), Next.js 16 App Router, tRPC, Drizzle ORM +
-  PostgreSQL, auth (NextAuth/Lucia), Tailwind + shadcn/ui, Vitest + Playwright,
-  Docker Compose, CI/CD, and all knowledge continuity files (CLAUDE.md for
-  Claude/Cursor, soul.md+user.md for OpenClaw/Hermes, agent.md for Codex/
-  Anti-Gravity, plus memory.md, progress.md, ARCHITECTURE.md, ADR/,
-  SECURITY.md, CONTRIBUTING.md, DESIGN.md). Hardens security by default: CSP, rate limiting,
-  RBAC, Zod validation, audit logging, dependency scanning.
-  Triggers on: "create a new project", "start a new SaaS", "project foundation",
-  "scaffold a project", "build a new app", "initialize foundation", "set up
-  foundation", "foundation template", "world's best foundation", "new full-stack
-  project", "start a monorepo".
-  Covers: project scaffolding, security hardening, knowledge continuity, team
-  onboarding, operational excellence, code generation scripts, multi-platform
-  agent configuration (Claude Code, OpenClaw, Hermes, Codex, Anti-Gravity,
-  Cursor, Windsurf, generic LLM).
-  NOT for: single-file scripts, existing projects that need incremental changes,
-  mobile-only apps. (Works with any TypeScript-compatible framework, not just
-  Next.js — swap the frontend layer as needed.)
+  Create a production-ready SaaS foundation with a user-selected technology
+  stack, security defaults, CI/CD, tests, and AI-agent configuration. Start by
+  offering full stack options, then create or normalize the mandatory project
+  context: README.md, AGENTS.md, PRODUCT.md, REQUIREMENTS.md, ARCHITECTURE.md,
+  DESIGN.md, SECURITY.md, DATABASE.md, API.md, TESTING.md, DEPLOYMENT.md,
+  DECISIONS.md, PROGRESS.md, and CHANGELOG.md. Use for new SaaS projects,
+  project foundations, full-stack scaffolds, and existing-project context setup;
+  not for a small isolated feature or script.
 ---
 
 # SaaS Foundation
@@ -35,6 +23,39 @@ docs, security hardening, CI/CD, Docker Compose, and scaffolding scripts.
 - User wants a complete starter template for a full-stack TypeScript app
 - User asks for project scaffolding with auth, DB, CI/CD, and docs built-in
 - User mentions "world's best foundation" or "project foundation"
+
+## Start with technology-stack choices
+
+Open the first user-facing response with **Technology stack options**. Give the
+user the full menu below, explain that the default is a safe recommendation, and
+let them choose one option per applicable layer or say **"use your recommended
+stack"**. Do not silently assume the default until they choose that phrase or
+decline to choose. Record every selection in `README.md`, `ARCHITECTURE.md`,
+`DECISIONS.md`, and `PROGRESS.md`.
+
+| Layer | Recommended default | Options to offer |
+|---|---|---|
+| Project shape | TypeScript monorepo | TypeScript monorepo, single Next.js app, React SPA + API, backend/API only, mobile + API |
+| Web framework | Next.js App Router | Next.js, React + Vite, Remix, Nuxt, SvelteKit, Astro, Angular |
+| Backend/API | tRPC | tRPC, REST route handlers, Hono, Fastify, NestJS, Express, GraphQL, Django/FastAPI, Laravel, Rails, Go, .NET |
+| Database | PostgreSQL | PostgreSQL, MySQL, SQLite/Turso, MongoDB, DynamoDB, Supabase, Neon, PlanetScale, Firebase/Firestore |
+| Data access | Drizzle | Drizzle, Prisma, Kysely, SQLAlchemy, Django ORM, TypeORM, raw SQL |
+| Authentication | Auth.js | Auth.js, Clerk, Better Auth, Supabase Auth, Firebase Auth, Auth0, Cognito, Lucia-compatible custom auth |
+| UI system | Tailwind + shadcn/ui | Tailwind + shadcn/ui, Radix, MUI, Ant Design, Chakra, Mantine, Park UI, CSS Modules, Panda CSS, styled-components |
+| State/data fetching | React Query | React Query, SWR, Zustand, Redux Toolkit, Jotai, server-first/RSC only |
+| Hosting | Vercel | Vercel, Cloudflare, Netlify, Railway, Render, Fly.io, AWS, GCP, Azure, DigitalOcean, self-hosted Docker/Kubernetes |
+| Background work | BullMQ + Redis | BullMQ + Redis, Inngest, Trigger.dev, Temporal, Cloud Tasks, none |
+| File storage | S3-compatible storage | S3, Cloudflare R2, Supabase Storage, UploadThing, Firebase Storage, none |
+| Email | Resend | Resend, Postmark, SendGrid, AWS SES, Plunk, none |
+| Payments | Stripe | Stripe, Razorpay, Paddle, Lemon Squeezy, Adyen, none |
+| Observability | Sentry + Pino | Sentry, OpenTelemetry, Datadog, Better Stack, Axiom, Highlight, none |
+| Test stack | Vitest + Playwright | Vitest, Jest, Bun test; Playwright, Cypress, WebdriverIO; contract/load tests if needed |
+| Package manager | pnpm | pnpm, npm, yarn, Bun |
+
+For non-TypeScript choices, keep the same context-file contract and adapt the
+project structure, commands, security controls, database patterns, API format,
+and tests to that stack. Do not generate TypeScript-only files for an
+incompatible choice.
 
 ## Default choices vs alternatives
 
@@ -66,13 +87,13 @@ substitute it during generation — the architecture stays the same.
 
 ## Before you start
 
-Ask the user these questions. Omit any that the user already answered:
+After presenting the technology-stack menu, ask only the unanswered questions.
+Omit any that the user already answered:
 
 1. **Project name** (kebab-case, e.g., `my-saas`)
-2. **UI library**: shadcn/ui (default) or Radix Primitives or something else?
-3. **API layer**: tRPC (default) or Hono or plain Next.js API Routes?
-4. **Auth provider**: NextAuth v5 (default) or Lucia v3 or something else?
-5. **AI platform**: Claude Code (default), OpenClaw / Hermes, Codex, Anti-Gravity, Cursor, Windsurf, or generic?
+2. **Technology stack**: choose one option per relevant layer above, or approve the recommended stack.
+3. **Deployment target**: choose a hosting option above, or defer it.
+4. **AI platform**: Claude Code (default), OpenClaw / Hermes, Codex, Anti-Gravity, Cursor, Windsurf, or generic?
 
 If they say "surprise me" or "your call" on any question, use the default.
 Use the AI platform answer to determine which agent configuration file(s) to
@@ -119,6 +140,20 @@ Create directory structure:
 │   ├── CONTRIBUTING.md
 │   └── ADR/
 │       └── adr-template.md
+├── README.md                   # Product overview and quick start
+├── AGENTS.md                   # Rules for AI agents and contributors
+├── PRODUCT.md                  # Product vision, users, scope, success metrics
+├── REQUIREMENTS.md             # Functional and non-functional requirements
+├── ARCHITECTURE.md             # System design and boundaries
+├── DESIGN.md                   # Design system and UX rules
+├── SECURITY.md                 # Security model and operational controls
+├── DATABASE.md                 # Data model, migrations, retention and access
+├── API.md                      # API contract, auth, errors and versioning
+├── TESTING.md                  # Test strategy, commands and release gates
+├── DEPLOYMENT.md               # Environments, rollout, rollback and runbooks
+├── DECISIONS.md                # Architecture decision log
+├── PROGRESS.md                 # Current plan, status, blockers and next work
+└── CHANGELOG.md                # User-facing release history
 ├── CLAUDE.md                   # Platform: Claude Code / Cursor / Windsurf
 ├── soul.md                     # Platform: OpenClaw / Hermes (agent identity)
 ├── user.md                     # Platform: OpenClaw / Hermes (user profile)
@@ -382,6 +417,43 @@ Files to write — **always write the universal files** (memory.md, progress.md,
 ARCHITECTURE.md, DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/). Then write the
 **platform-specific agent config file(s)** based on the user's AI platform choice.
 
+### Mandatory project context files (always create or normalize)
+
+Use the templates in `templates/context/` to create every mandatory root context
+file. Replace placeholders with the project name, current date/year, and selected
+technology stack. The result must be useful immediately: put the selected stack,
+known assumptions, first deliverable, and next concrete action in the files; do
+not leave a blank documentation shell.
+
+If the target is an existing project, inspect each mandatory file before changing
+it. Keep valuable project-specific content, normalize it into the template's
+headings, and add only missing sections. Never overwrite a populated file with a
+generic template. When a fact is unknown, write `TBD — validate` and add it to
+`PROGRESS.md`; do not invent it. Preserve an existing `CHANGELOG.md` history and
+append a dated `Unreleased` entry rather than rewriting prior releases.
+
+| File | Purpose | Minimum working content |
+|---|---|---|
+| `README.md` | Executive project overview and local start path | value proposition, selected stack, prerequisites, run/test commands, links to every context file |
+| `AGENTS.md` | Operating rules for AI agents and contributors | repo map, non-negotiable rules, commands, security boundaries, documentation update rule |
+| `PRODUCT.md` | Product direction | problem, users, jobs, scope, non-goals, success metrics, first milestone |
+| `REQUIREMENTS.md` | Build contract | prioritized functional requirements, non-functional requirements, acceptance criteria, out-of-scope list |
+| `ARCHITECTURE.md` | Technical blueprint | selected stack, component/data flow, boundaries, repository layout, key trade-offs |
+| `DESIGN.md` | UX and visual system | users and journeys, design principles, tokens, accessibility, responsive and state rules |
+| `SECURITY.md` | Security baseline | data classification, auth/authz, validation, secrets, threat controls, incident response and review checklist |
+| `DATABASE.md` | Data contract | chosen datastore, entity/index plan, migrations, tenancy, access, backups/retention |
+| `API.md` | Interface contract | API style, base URL/versioning, auth, error envelope, endpoint/event inventory, idempotency/rate limits |
+| `TESTING.md` | Quality plan | test pyramid, environments/fixtures, commands, coverage targets, release gates and critical journeys |
+| `DEPLOYMENT.md` | Delivery runbook | environments, configuration/secrets, CI/CD, rollout, smoke checks, monitoring and rollback |
+| `DECISIONS.md` | Decision log | decision record format plus the initial selected-stack decision and future decision index |
+| `PROGRESS.md` | Live execution board | current phase/status, checked initial context task, next actions, risks/blockers and update log |
+| `CHANGELOG.md` | Release history | Keep a Changelog format, an `Unreleased` section, and the initial foundation entry |
+
+Keep legacy `docs/memory.md`, `docs/progress.md`, `docs/ARCHITECTURE.md`,
+`docs/DESIGN.md`, `docs/SECURITY.md`, `docs/CONTRIBUTING.md`, and `docs/ADR/`
+only when they already exist or the user asks for them. Make root files canonical
+and add links rather than maintaining conflicting duplicate sources of truth.
+
 ### Agent configuration files (platform-dependent)
 
 Generate one of these based on the user's AI platform answer:
@@ -457,7 +529,8 @@ Run these checks before declaring done:
 07. [ ] .gitignore covers: node_modules, .env, dist, .next, *.log
 08a. [ ] Universal docs exist: memory.md, progress.md, ARCHITECTURE.md,
          DESIGN.md, SECURITY.md, CONTRIBUTING.md, ADR/adr-template.md
-08b. [ ] Platform config exists: CLAUDE.md OR soul.md+user.md OR agent.md
+08b. [ ] All mandatory root context files exist, use the selected stack, and have no unresolved placeholder except explicit `TBD — validate` items tracked in PROGRESS.md
+08c. [ ] Platform config exists: CLAUDE.md OR soul.md+user.md OR agent.md
          (matching user's AI platform choice)
 09. [ ] middleware.ts applies CSP + Helmet headers
 10. [ ] Health endpoint returns 200 + JSON with status fields
@@ -512,7 +585,7 @@ When completed, return:
 ## Scope boundary
 
 This skill generates a NEW project from scratch. It does NOT:
-- Modify an existing project's structure
+- Modify an existing project's application structure or business logic. It may create or normalize the mandatory root context files in an existing project while preserving its content.
 - Add features to an already-running codebase
 - Handle deployment to specific cloud providers (Vercel/Docker deployment in CI/CD is a stub)
 - Generate business logic for a specific domain (CRM, analytics, etc.)
