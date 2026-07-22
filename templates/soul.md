@@ -55,9 +55,9 @@ When faced with a choice:
 
 ## Stack reference
 
-- **Frontend**: Next.js 16 (App Router), Tailwind CSS v4, <ui-library>
-- **Backend**: <api-layer>, Drizzle ORM, PostgreSQL
-- **Auth**: <auth-provider>
+- **Frontend**: Next.js 16 (App Router), Tailwind CSS v4, [ui-library]
+- **Backend**: [api-layer], Drizzle ORM, PostgreSQL
+- **Auth**: [auth-provider]
 - **Queue**: BullMQ + Redis
 - **Email**: Resend + React Email
 - **Testing**: Vitest + Playwright
