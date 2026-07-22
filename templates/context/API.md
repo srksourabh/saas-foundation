@@ -16,3 +16,6 @@
 ## Rules
 
 Validate inputs, return stable error codes, document pagination/filtering, and define idempotency and rate limits for writes.
+
+Record backward-compatibility, deprecation, timeout/retry, failure-isolation, and
+observability requirements for every external or business-critical interface.

@@ -17,6 +17,30 @@ Build a production-grade TypeScript SaaS starter with zero compromises. When inv
 generate the complete project structure, all config files, all knowledge continuity
 docs, security hardening, CI/CD, Docker Compose, and scaffolding scripts.
 
+## Operating baseline: secure, scalable, AI-assisted delivery
+
+Before selecting a stack or generating files, read `reference/ai-enabled-sdlc.md`
+and `reference/stack.md`. These are the governing instructions for this skill and
+override any earlier fixed-tool recommendation in this file.
+
+Build the smallest architecture that safely satisfies the approved requirements;
+do not mistake more services, a monorepo, an ORM, Redis, a queue, Docker, or a
+specific cloud provider for strength. Strength comes from explicit ownership,
+testable requirements, risk-proportionate controls, reviewed versioned changes,
+security/privacy by design, observability, tested recovery, and traceability.
+
+Treat AI-generated code, tests, design, and documents as untrusted work product.
+Never let an AI agent approve its own work, weaken a control, access unapproved
+secrets/production/personal data, or independently authorise a material merge,
+release, production action, or risk exception. Require independent human review
+and record evidence according to the project risk class.
+
+At project start, classify risk as A (critical), B (significant), C (standard),
+or D (experimental). Create the stage-gate evidence and definition-of-ready/done
+checklists in the mandatory root context files. Scale evidence and approval depth
+to the class; do not remove a control without a dated, named authorised exception
+in `DECISIONS.md`.
+
 ## When to invoke
 
 - User says "create a new project", "start a SaaS", "build a foundation"
@@ -99,6 +123,14 @@ If they say "surprise me" or "your call" on any question, use the default.
 Use the AI platform answer to determine which agent configuration file(s) to
 generate in Phase 5.
 
+Before scaffolding, write a concise task brief in `PROGRESS.md`, then establish
+these evidence-based gates in the root context files: G1 business approval,
+G2 requirements approval, G3 design/risk approval, G4 build complete, G5 quality
+and security approval, G6 release approval, and G7 go-live acceptance. A named
+human owner is accountable for each applicable gate. For a new project, G1-G3
+must be materially complete before production implementation; for an incremental
+change, use the gates proportionately to its risk class.
+
 ## Execution phases
 
 Execute these phases **in order**. Each phase must complete fully before the next begins.
@@ -106,6 +138,11 @@ Execute these phases **in order**. Each phase must complete fully before the nex
 ---
 
 ### Phase 0 — Scaffold project skeleton
+
+Use the following structure only for the selected TypeScript monorepo profile.
+For a single application or a non-TypeScript stack, generate the equivalent
+minimal structure and keep the same root context, security, testing, deployment,
+and evidence contract. Do not create unused services or packages.
 
 Create directory structure:
 

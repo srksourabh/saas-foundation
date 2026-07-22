@@ -1,32 +1,62 @@
-# Stack decisions (defaults vs alternatives)
+# Technology selection guide
 
-This foundation ships with **defaults** for every layer. They can all be swapped
-if the user requests it. The table below explains why each default was chosen and
-what alternatives are available.
+No component is mandatory merely because it is popular. Start with the product,
+risk class, team capability, integration constraints, expected scale, operating
+model, cost, and exit path. Record the selected option and alternatives in
+`DECISIONS.md` before implementation.
 
-## Why each default
+## Recommended TypeScript web profile
 
-| Default | Why this over the alternative | Alternatives available |
-|---------|------------------------------|------------------------|
-| **Turborepo** | Lighter, faster, Vercel-native. Nx is more powerful but heavier than a SaaS starter needs. | Nx |
-| **pnpm** | Disk-efficient (content-addressable store), strict dependency resolution. Faster installs. | npm, yarn, bun |
-| **Next.js 16** | Larger ecosystem, RSC out of box, Vercel deploy is one click. Remix is excellent but Next.js has more mindshare + packages. | Remix |
-| **tRPC** | End-to-end type safety with zero schema duplication. REST needs manual types. GraphQL needs codegen. tRPC infers types from your functions. | Hono, Next.js API Routes, Express, Fastify |
-| **Drizzle** | Lighter (no engine binary), SQL-like API gives more control, faster CI installs. Prisma has better DX for complex relations but is heavier. | Prisma, Kysely, TypeORM |
-| **Tailwind CSS v4** | Utility-first is faster to iterate, v4 has the CSS-first config. No runtime CSS-in-JS cost. | Panda CSS, CSS modules, styled-components |
-| **shadcn/ui** | Copy-paste model (you own the code), Radix-based (accessible), no lock-in. MUI is heavier with its own design language. | MUI, Chakra, Ant Design, Park UI, Radix Primitives |
-| **Vitest** | Faster (esbuild-based), ESM-native, same API as Jest. Jest is slower and has ESM issues. | Jest, Bun test |
-| **Playwright** | Faster, better API for modern SPAs, multi-browser, network interception built in. | Cypress |
-| **NextAuth v5 / Lucia** | Self-hosted, no vendor lock-in, full control over user data. Auth0 is expensive at scale. | Clerk, Auth0, Supabase Auth |
-| **BullMQ** | Redis-native, TypeScript-first, battle-tested. Inngest is newer but vendor-dependent. | Inngest, Trigger.dev |
-| **Pino** | Faster (10x+), smaller, JSON-native. Winston is heavier with more features than a starter needs. | Winston |
-| **Sentry** | Generous free tier, excellent Next.js integration, simple setup. Datadog is overkill for a starter. | Datadog, NewRelic, Highlight |
-| **Resend** | Modern API, React Email templates, generous free tier. SendGrid has DX issues and older API design. | SendGrid, Postmark, Plunk |
+For a new, conventional SaaS with a TypeScript-capable team, start evaluation
+with: Next.js App Router, PostgreSQL, a managed auth provider or Auth.js,
+Tailwind plus an accessible component system, Vitest, Playwright, structured
+logs, error monitoring, CI/CD, and versioned SQL migrations. Use a monorepo,
+tRPC, Redis, queues, Docker, and additional services only when an actual need
+justifies their operational cost.
 
-## When to swap
+This is a starting profile, not an architecture decision. A single application
+with well-defined modules is normally safer than a premature monorepo or
+microservices. Split components only for an independently justified deployment,
+ownership, scaling, security, or runtime boundary.
 
-- **Need serverless DB?** Swap Postgres for Neon or Supabase (Drizzle works with both).
-- **Need file uploads?** Add Uploadthing or Tigris at `packages/storage/`.
-- **Need real-time?** Add WebSockets via Socket.io or Pusher at `packages/realtime/`.
-- **Need AI features?** Add OpenRouter/Azure OpenAI client at `packages/ai/`.
-- **Need multi-tenant?** Add `tenant_id` to all Drizzle schemas and update RBAC middleware.
+## ORM and migration decision
+
+An ORM is optional. What is mandatory is a reviewed, version-controlled,
+production-safe migration workflow; database constraints; query performance
+evidence for critical paths; backups; restore testing; and a rollback/forward-fix
+plan.
+
+| Option | Prefer when | Do not choose by default when |
+|---|---|---|
+| Drizzle + SQL migrations | TypeScript team wants SQL-shaped code, direct control, PostgreSQL, and a lightweight abstraction | the team needs a highly declarative model-first workflow or lacks comfort reviewing SQL |
+| Prisma + Prisma Migrate | team values generated client and declarative model workflow; schema is primarily application-managed | database has extensive database-native behaviour or the generated-client workflow is not a fit |
+| Kysely / query builder + SQL migrations | team wants strong TypeScript typing with explicit SQL and independent migrations | the team needs a full ORM and will not own SQL/query design |
+| SQL-first migrations + thin driver | complex reporting, extensions, stored procedures, strict database ownership, or polyglot services | team lacks database review discipline or needs faster product-level CRUD iteration |
+| Supabase / hosted data platform | managed auth/storage/realtime and platform constraints fit the product | its operational and portability trade-offs are not accepted |
+
+Drizzle is therefore a **recommended option**, not a requirement. Its official
+documentation supports versioned SQL migrations and PostgreSQL drivers; Prisma
+also produces version-controlled SQL migrations and is a valid scalable choice.
+Choose one data-access path per bounded context and do not mix tools casually.
+
+## Other selection checkpoints
+
+| Concern | Default starting point | Escalate or switch when |
+|---|---|---|
+| Project shape | single deployable application | multiple independently owned/deployed systems have a proven need |
+| API | route handlers or tRPC for a TypeScript-only client | public/partner APIs, multi-language clients, streaming/edge needs, or formal API contracts favour REST/OpenAPI, GraphQL, Hono, or another option |
+| Authentication | managed provider or Auth.js with server-side authorization | enterprise SSO, regulatory controls, multi-region identity, or implementation speed changes the trade-off |
+| Queue/cache | none initially | long-running, scheduled, high-volume, rate-limited, or resilient background work is accepted and has an owner |
+| Observability | structured logs, health checks, error tracking | SLOs, distributed flows, regulated audit, or high scale justify metrics/traces/on-call tooling |
+| Hosting | managed platform with least operational burden | geography, compliance, networking, cost, long-running processes, or infrastructure control requires a different platform |
+
+## Non-negotiable implementation rules
+
+- Pin and review dependencies; evaluate licence, vulnerability, maintenance, and
+  ownership before adding one.
+- Keep architecture diagrams, database/API contracts, tests, deployment runbook,
+  and decision records aligned with the selected stack.
+- Test migrations against representative data and use expand-migrate-contract or
+  another compatible strategy for breaking production data changes.
+- Revisit a decision when assumptions, cost, load, team capability, incidents, or
+  vendor terms materially change.

@@ -59,6 +59,19 @@ Every generated project includes these root-level files, ready for immediate use
 
 For an existing project, the skill preserves useful content and restructures these files into the standard format instead of replacing them wholesale.
 
+### Engineering operating system
+
+The skill now applies a risk-proportionate, AI-enabled SDLC: named accountable
+owners, Definition of Ready/Done, evidence-based G1-G7 stage gates, traceability,
+small reversible changes, independent review of AI output, controlled database
+migrations, release/rollback evidence, and post-release ownership. The detailed
+baseline is in [reference/ai-enabled-sdlc.md](reference/ai-enabled-sdlc.md).
+
+Technology choices are deliberately not forced. The TypeScript profile is a
+recommended starting point, while [reference/stack.md](reference/stack.md)
+explains when Drizzle, Prisma, SQL-first access, a monorepo, queues, or other
+components are appropriate.
+
 ```
 <project-name>/
 ├── apps/
